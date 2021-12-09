@@ -71,7 +71,17 @@ module.exports = function (list) {
       multi = options.order === 'desc' ? -1 : 1,
       sortFunction
 
-    if (customSortFunction) {
+    if(options.valueName === 'score') {
+      console.log('sort by score');
+      sortFunction = function (itemA, itemB) {
+        var sort = list.utils.naturalSort
+        sort.alphabet = list.alphabet || options.alphabet || undefined
+        if (!sort.alphabet && options.insensitive) {
+          sort = list.utils.naturalSort.caseInsensitive
+        }
+        return sort(itemA.values()[options.valueName], itemB.values()[options.valueName]) * multi
+      }
+    } else if (customSortFunction) {
       sortFunction = function (itemA, itemB) {
         return customSortFunction(itemA, itemB, options) * multi
       }
@@ -84,7 +94,7 @@ module.exports = function (list) {
         }
         return sort(itemA.values()[options.valueName], itemB.values()[options.valueName]) * multi
       }
-    }
+    }   
 
     list.items.sort(sortFunction)
     list.update()

@@ -21,6 +21,7 @@ module.exports = function (list, options) {
 
   var fuzzySearch = {
     search: function (searchString, columns) {
+      // console.log('fuzzy called ');
       // Substract arguments from the searchString or put searchString as only argument
       var searchArguments = options.multiSearch ? searchString.replace(/ +$/, '').split(/ +/) : [searchString]
 
@@ -55,15 +56,12 @@ module.exports = function (list, options) {
     },
   }
 
-  events.bind(
-    getByClass(list.listContainer, options.searchClass),
-    'keyup',
+  events.bind( getByClass(list.listContainer, options.searchClass),'keyup', 
     list.utils.events.debounce(function (e) {
-      var target = e.target || e.srcElement // IE have srcElement
+      var target = e.target || e.srcElement 
       list.search(target.value, fuzzySearch.search)
     }, list.searchDelay)
   )
-
   return function (str, columns) {
     list.search(str, columns, fuzzySearch.search)
   }

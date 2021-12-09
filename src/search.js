@@ -87,6 +87,7 @@ module.exports = function (list) {
   var searchMethod = function (str) {
     list.trigger('searchStart')
 
+    // console.log('search called ');
     prepare.resetList()
     prepare.setSearchString(str)
     prepare.setOptions(arguments) // str, cols|searchFunction, searchFunction
@@ -97,6 +98,7 @@ module.exports = function (list) {
     } else {
       list.searched = true
       if (customSearch) {
+        // console.log('custom: ' + customSearch);
         customSearch(searchString, columns)
       } else {
         search.list()
@@ -105,6 +107,8 @@ module.exports = function (list) {
 
     list.update()
     list.trigger('searchComplete')
+    console.log(`list: ${JSON.stringify(list)}`);
+    console.log(`matching ${str}: ${list.matchingItems.length} ${JSON.stringify(list.matchingItems)}`);
     return list.visibleItems
   }
 
@@ -121,6 +125,7 @@ module.exports = function (list) {
         // If oninput already have resetted the list, do nothing
         searchMethod(target.value)
       }
+
     }, list.searchDelay)
   )
 

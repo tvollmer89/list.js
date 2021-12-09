@@ -6,7 +6,8 @@ var naturalSort = require('string-natural-compare'),
   toString = require('./utils/to-string'),
   classes = require('./utils/classes'),
   getAttribute = require('./utils/get-attribute'),
-  toArray = require('./utils/to-array')
+  toArray = require('./utils/to-array'),
+  Fuse = require('../node_modules/fuse.js/dist/fuse.min.js')
 
 module.exports = function (id, options, values) {
   var self = this,
@@ -14,6 +15,15 @@ module.exports = function (id, options, values) {
     Item = require('./item')(self),
     addAsync = require('./add-async')(self),
     initPagination = require('./pagination')(self)
+
+  var fuseOptions = {
+    includeScore: true,
+    useExtendedSearch: true, 
+    ignoreFieldNorm: true, 
+    threshold: 0.2, 
+    ignoreLocation: true, 
+    keys: [{ name: 'name', weight: 2 }, 'definition']
+  };
 
   init = {
     start: function () {
@@ -57,12 +67,17 @@ module.exports = function (id, options, values) {
       self.filter = require('./filter')(self)
       self.sort = require('./sort')(self)
       self.fuzzySearch = require('./fuzzy-search')(self, options.fuzzySearch)
+      self.fuse = new Fuse([], fuseOptions)
+      self.fuseSearch = require('./fuse-search')(self, options.fuseSearch)
+
 
       this.handlers()
       this.items()
+      // this.setFuse = () => {
+      // }
       this.pagination()
-
       self.update()
+      console.log(`setFuse: ${JSON.stringify(self.items)}`);
     },
     handlers: function () {
       for (var handler in self.handlers) {
@@ -96,6 +111,7 @@ module.exports = function (id, options, values) {
    * Re-parse the List, use if html have changed
    */
   this.reIndex = function () {
+    // console.log('reindex called');
     self.items = []
     self.visibleItems = []
     self.matchingItems = []
@@ -124,9 +140,14 @@ module.exports = function (id, options, values) {
       return
     }
     var added = [],
-      notCreate = false
+    notCreate = false
     if (values[0] === undefined) {
+      // this signifies the paging list
       values = [values]
+    } else {
+      // console.log(`values: ${JSON.stringify(values)}`);
+      self.fuse.setCollection(values);
+      // console.log(`${self.fuse.getIndex().size()}`);
     }
     for (var i = 0, il = values.length; i < il; i++) {
       var item = null
@@ -135,11 +156,13 @@ module.exports = function (id, options, values) {
       self.items.push(item)
       added.push(item)
     }
+    
     self.update()
     return added
   }
 
   this.show = function (i, page) {
+    // console.log('show called');
     this.i = i
     this.page = page
     self.update()
@@ -169,6 +192,7 @@ module.exports = function (id, options, values) {
    * property "valueName" === value
    */
   this.get = function (valueName, value) {
+    console.log('get called');
     var matchedItems = []
     for (var i = 0, il = self.items.length; i < il; i++) {
       var item = self.items[i]
@@ -210,6 +234,7 @@ module.exports = function (id, options, values) {
   }
 
   this.trigger = function (event) {
+    // console.log(`handlers[${event}]: ` + JSON.stringify(self.handlers[event]));
     var i = self.handlers[event].length
     while (i--) {
       self.handlers[event][i](self)
@@ -231,15 +256,22 @@ module.exports = function (id, options, values) {
         il = is.length
       while (il--) {
         is[il].found = false
+        is[il].score = 0
       }
       return self
     },
   }
-
+  
+  /**
+   *
+   * TO DO:
+   * Need to add/update sort function which is called on every update. If self.searched == true, sort by item score 
+   *
+   */ 
   this.update = function () {
     var is = self.items,
       il = is.length
-
+    
     self.visibleItems = []
     self.matchingItems = []
     self.templater.clear()
@@ -256,6 +288,7 @@ module.exports = function (id, options, values) {
       }
     }
     self.trigger('updated')
+    // if(self.searched) self.sort('score');
     return self
   }
 

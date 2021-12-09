@@ -13,7 +13,8 @@ module.exports = function (list) {
     } else if (isHidden) {
       list.listContainer.style.display = 'block'
     }
-
+    
+    console.log('paging list: ' + JSON.stringify(pagingList));
     var item,
       l = list.matchingItems.length,
       index = list.i,
@@ -26,10 +27,11 @@ module.exports = function (list) {
 
     right = pages - right
     pagingList.clear()
+    // console.log(`paging list after cleAR: ${JSON.stringify(pagingList)} PAGES: ${pages}`);
     for (var i = 1; i <= pages; i++) {
       var className = currentPage === i ? 'active' : ''
 
-      //console.log(i, left, right, currentPage, (currentPage - innerWindow), (currentPage + innerWindow), className);
+      // console.log(i, left, right, currentPage, (currentPage - innerWindow), (currentPage + innerWindow), className);
 
       if (is.number(i, left, right, currentPage, innerWindow)) {
         item = pagingList.add({
@@ -90,7 +92,7 @@ module.exports = function (list) {
       searchClass: 'pagination-search-that-is-not-supposed-to-exist',
       sortClass: 'pagination-sort-that-is-not-supposed-to-exist',
     })
-
+    
     events.bind(pagingList.listContainer, 'click', function (e) {
       var target = e.target || e.srcElement,
         page = list.utils.getAttribute(target, 'data-page'),
@@ -101,6 +103,7 @@ module.exports = function (list) {
     })
 
     list.on('updated', function () {
+      // console.log('pagingList: ' + JSON.stringify(pagingList) + 'options ' + JSON.stringify(options));
       refresh(pagingList, options)
     })
     refresh(pagingList, options)

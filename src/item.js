@@ -6,6 +6,7 @@ module.exports = function (list) {
 
     this.found = false // Show if list.searched == true and this.found == true
     this.filtered = false // Show if list.filtered == true and this.filtered == true
+    this.score = 0 //Search accuracy score starts at 0
 
     var init = function (initValues, element, notCreate) {
       if (element === undefined) {
@@ -42,6 +43,8 @@ module.exports = function (list) {
       list.templater.hide(item)
     }
 
+
+    // is it something here? 
     this.matching = function () {
       return (
         (list.filtered && list.searched && item.found && item.filtered) ||
